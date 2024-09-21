@@ -57,6 +57,34 @@ pub fn BiggestFile(dir_path: []const u8) !fileStat {
             maxSize = stat.size;
             biggestName = entry.name;
             print("bigger {s} \n", .{entry.name});
+          return fileStat{
+        .name = biggestName,
+        .size = maxSize,
+    };
+        }
+    }
+    
+}
+pub fn BiggestFile(dir_path: []const u8) !fileStat {
+    var dir = try std.fs.openDirAbsolute(dir_path, .{ .iterate = true });
+    defer dir.close();
+    var iter = dir.iterate();
+    var maxSize: u64 = 0;
+    var biggestName: []const u8 = undefined;
+    while (try iter.next()) |entry| {
+        if (entry.kind == std.fs.File.Kind.directory) {
+            print("{s} \n", .{entry.name});
+            continue;
+        }
+        if (entry.name[0] == '.') continue;
+        const file = try dir.openFile(entry.name, .{});
+        defer file.close();
+        const stat = try file.stat();
+
+        if (maxSize < stat.size) {
+            maxSize = stat.size;
+            biggestName = entry.name;
+            print("bigger {s} \n", .{entry.name});
         }
     }
     return fileStat{
