@@ -8,14 +8,10 @@ const printer = @import("printer.zig");
 // command to delete it 
 // command to navigate throuth dirs 
 
-selectedFile: ?.[]const u8 = null; 
-
-BiggestFile returns filePath
-Delete selectedFile
-Move to next dir  
+// selectedFile: ?.[]const u8 = null; 
 
 fn processCMD(cmd: []const u8){
-  if (streql("big", cmd)) //files.BiggestFile()
+  // if (streql("big", cmd)) //files.BiggestFile()
   
   
 

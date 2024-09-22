@@ -4,7 +4,13 @@ const print = std.debug.print;
 const fileError = error{
     extentionNotFound,
 };
+
+const fileKind = enum {
+    file,
+    dir,
+};
 const fileStat = struct {
+    kind: fileKind,
     name: []const u8,
     size: u64,
 };
@@ -37,60 +43,22 @@ pub fn FilesWeigth(dir_path: []const u8) !void {
     }
 }
 
-pub fn BiggestFile(dir_path: []const u8) !fileStat {
+pub fn DirFileStat(dir_path: []const u8) !void {
     var dir = try std.fs.openDirAbsolute(dir_path, .{ .iterate = true });
     defer dir.close();
     var iter = dir.iterate();
-    var maxSize: u64 = 0;
-    var biggestName: []const u8 = undefined;
-    while (try iter.next()) |entry| {
-        if (entry.kind == std.fs.File.Kind.directory) {
-            print("{s} \n", .{entry.name});
-            continue;
-        }
-        if (entry.name[0] == '.') continue;
-        const file = try dir.openFile(entry.name, .{});
-        defer file.close();
-        const stat = try file.stat();
+    var arr: [3][]const u8 = undefined;
+    var count: u8 = 0;
 
-        if (maxSize < stat.size) {
-            maxSize = stat.size;
-            biggestName = entry.name;
-            print("bigger {s} \n", .{entry.name});
-          return fileStat{
-        .name = biggestName,
-        .size = maxSize,
-    };
-        }
-    }
-    
-}
-pub fn BiggestFile(dir_path: []const u8) !fileStat {
-    var dir = try std.fs.openDirAbsolute(dir_path, .{ .iterate = true });
-    defer dir.close();
-    var iter = dir.iterate();
-    var maxSize: u64 = 0;
-    var biggestName: []const u8 = undefined;
     while (try iter.next()) |entry| {
-        if (entry.kind == std.fs.File.Kind.directory) {
-            print("{s} \n", .{entry.name});
-            continue;
-        }
-        if (entry.name[0] == '.') continue;
-        const file = try dir.openFile(entry.name, .{});
-        defer file.close();
-        const stat = try file.stat();
-
-        if (maxSize < stat.size) {
-            maxSize = stat.size;
-            biggestName = entry.name;
-            print("bigger {s} \n", .{entry.name});
-        }
+        print("name {s}", .{entry.name});
+        const pa = std.heap.page_allocator;
+        const name = pa.alloc([]const u8, entry.name.len);
+        @memcpy(name, entry.name);
+        arr[count] = name;
+        count += 1;
     }
-    return fileStat{
-        .name = biggestName,
-        .size = maxSize,
-    };
+    print("{s}", .{arr});
 }
 
 pub fn extractExtention(str: []const u8) fileError![]const u8 {
