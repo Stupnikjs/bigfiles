@@ -25,39 +25,42 @@ pub fn listFiles() !void {
     }
 }
 
-pub fn FilesWeigth(dir_path: []const u8) !void {
+pub fn DirFileStat(dir_path: []const u8) ![]fileStat {
+    const list_al = std.heap.page_allocator;
+    var list = std.ArrayList(fileStat).init(list_al);
+    defer list.deinit();
     var dir = try std.fs.openDirAbsolute(dir_path, .{ .iterate = true });
     defer dir.close();
     var iter = dir.iterate();
 
     while (try iter.next()) |entry| {
+        const pa = std.heap.page_allocator;
+        const name = try std.mem.Allocator.dupe(pa, u8, entry.name);
         if (entry.kind == std.fs.File.Kind.directory) {
-            print("{s} \n", .{entry.name});
             continue;
         }
-        if (entry.name[0] == '.') continue;
-        print("{s} \n", .{entry.name});
-        const file = try dir.openFile(entry.name, .{});
+        const file = try dir.openFile(name, .{});
+        defer file.close();
         const stat = try file.stat();
-        print("{d} bytes \n", .{stat.size / 8});
+        const file_stat: fileStat = .{
+            .name = name,
+            .kind = fileKind.file,
+            .size = stat.size,
+        };
+        try list.append(file_stat);
     }
+    // create a new independant slice copy
+    return list.toOwnedSlice();
 }
 
-pub fn DirFileStat(dir_path: []const u8) !void {
-    var dir = try std.fs.openDirAbsolute(dir_path, .{ .iterate = true });
-    defer dir.close();
-    var iter = dir.iterate();
-    var arr: [3][]const u8 = undefined;
-    var count: u8 = 0;
-
-    while (try iter.next()) |entry| {
-        print("name {s}", .{entry.name});
-        const pa = std.heap.page_allocator;
-        const name = std.mem.Allocator.dupe([]const u8, entry.name)
-        arr[count] = name;
-        count += 1;
+pub fn orderFileStat(arr: []fileStat) ![]fileStat {
+    var list = std.ArrayList(fileStat).init(std.heap.page_allocator);
+    defer list.deinit();
+    for (arr) |stat| {
+        if (list.items.len == 0) try list.append(stat);
+        if (stat.size > list.getLast().size) try list.append(stat);
     }
-    print("{s}", .{arr});
+    return list.toOwnedSlice();
 }
 
 pub fn extractExtention(str: []const u8) fileError![]const u8 {
