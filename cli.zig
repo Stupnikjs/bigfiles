@@ -24,7 +24,8 @@ pub fn getArgs(cmd: []const u8) ![2][]const u8 {
     arr[1] = try list2.toOwnedSlice();
     return arr;
 }
-
+// retourne le currDir a chaque appel de la fonction
+// ou uniquement quand cd 
 pub fn process(args: [2][]const u8) !void {
     if (streql(u8, args[0], "del")) std.debug.print("{s}\n", .{"delete command"});
     if (streql(u8, args[0], "list")) try files.listFiles();
