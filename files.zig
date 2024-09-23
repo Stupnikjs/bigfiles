@@ -53,8 +53,7 @@ pub fn DirFileStat(dir_path: []const u8) !void {
     while (try iter.next()) |entry| {
         print("name {s}", .{entry.name});
         const pa = std.heap.page_allocator;
-        const name = pa.alloc([]const u8, entry.name.len);
-        @memcpy(name, entry.name);
+        const name = std.mem.Allocator.dupe([]const u8, entry.name)
         arr[count] = name;
         count += 1;
     }
