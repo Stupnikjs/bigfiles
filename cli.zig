@@ -25,7 +25,7 @@ pub fn getArgs(cmd: []const u8) ![2][]const u8 {
     return arr;
 }
 
-pub fn process(args: [2][]const u8) !void {
+pub fn process(args: [2][]const u8) !currDir {
     if (streql(u8, args[0], "del")) std.debug.print("{s}\n", .{"delete command"});
     if (streql(u8, args[0], "list")) try files.listFiles();
     if (streql(u8, args[0], "exit")) std.process.exit(1);
