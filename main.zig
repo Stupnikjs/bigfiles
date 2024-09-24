@@ -13,6 +13,5 @@ pub fn main() !void {
         const str = user_input[0 .. user_input.len - 1];
         const args = try cli.getArgs(str);
         _ = try cli.process(&curr_path, args);
-        try stdout.print("{s} \n", .{curr_path});
     }
 }

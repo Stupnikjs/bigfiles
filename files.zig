@@ -63,17 +63,6 @@ pub fn largestFile(arr: []fileStat) !fileStat {
     return largest;
 }
 
-pub fn extractExtention(str: []const u8) fileError![]const u8 {
-    var i = str.len - 1;
-    while (i > 0) {
-        if (str[i] == '.') {
-            return str[i..];
-        }
-        i -= 1;
-    }
-    return fileError.extentionNotFound;
-}
-
 pub fn deleteFileInDir(dir_path: []const u8, sub_path: []const u8) !void {
     if (std.mem.eql(u8, dir_path, ".")) {
         try std.fs.cwd().deleteTree(sub_path);
