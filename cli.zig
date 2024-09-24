@@ -25,9 +25,14 @@ pub fn getArgs(cmd: []const u8) ![2][]const u8 {
     return arr;
 }
 // retourne le currDir a chaque appel de la fonction
-// ou uniquement quand cd 
-pub fn process(args: [2][]const u8) !void {
-    if (streql(u8, args[0], "del")) std.debug.print("{s}\n", .{"delete command"});
-    if (streql(u8, args[0], "list")) try files.listFiles();
+// ou uniquement quand cd
+pub fn process(curr_path: *[]u8, args: [2][]const u8) !void {
+    if (streql(u8, args[0], "del")) try files.deleteFileInDir(".", args[1]);
+    if (streql(u8, args[0], "list")) try files.listFiles(curr_path.*);
     if (streql(u8, args[0], "exit")) std.process.exit(1);
+    if (streql(u8, args[0], "pwd")) std.debug.print("curr path {s} \n", .{curr_path.*});
+    if (streql(u8, args[0], "cd")) {
+        curr_path.* = try files.changeDir(args[1]);
+    }
+    // else std.debug.print("unknown command {s}\n", .{args[0]});
 }

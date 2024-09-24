@@ -3,6 +3,7 @@ const print = std.debug.print;
 
 const fileError = error{
     extentionNotFound,
+    nofileInDir,
 };
 
 const fileKind = enum {
@@ -15,8 +16,8 @@ const fileStat = struct {
     size: u64,
 };
 
-pub fn listFiles() !void {
-    const dir = try std.fs.cwd().openDir(".", .{ .iterate = true });
+pub fn listFiles(curr_path: []const u8) !void {
+    const dir = try std.fs.openDirAbsolute(curr_path, .{ .iterate = true });
     var walker = try dir.walk(std.heap.page_allocator);
     defer walker.deinit();
     while (try walker.next()) |entry| {
@@ -53,14 +54,13 @@ pub fn DirFileStat(dir_path: []const u8) ![]fileStat {
     return list.toOwnedSlice();
 }
 
-pub fn orderFileStat(arr: []fileStat) ![]fileStat {
-    var list = std.ArrayList(fileStat).init(std.heap.page_allocator);
-    defer list.deinit();
+pub fn largestFile(arr: []fileStat) !fileStat {
+    if (arr.len == 0) return fileError.nofileInDir;
+    var largest: fileStat = arr[0];
     for (arr) |stat| {
-        if (list.items.len == 0) try list.append(stat);
-        if (stat.size > list.getLast().size) try list.append(stat);
+        if (stat.size > largest.size) largest = stat;
     }
-    return list.toOwnedSlice();
+    return largest;
 }
 
 pub fn extractExtention(str: []const u8) fileError![]const u8 {
@@ -74,6 +74,19 @@ pub fn extractExtention(str: []const u8) fileError![]const u8 {
     return fileError.extentionNotFound;
 }
 
-pub fn deleteDir(str: []const u8) !void {
-    try std.fs.cwd().deleteTree(str);
+pub fn deleteFileInDir(dir_path: []const u8, sub_path: []const u8) !void {
+    if (std.mem.eql(u8, dir_path, ".")) {
+        try std.fs.cwd().deleteTree(sub_path);
+        std.debug.print("success deleting {s} \n", .{sub_path});
+    } else {
+        const dir = try std.fs.openDirAbsolute(dir_path, .{});
+        try dir.deleteTree(sub_path);
+        std.debug.print("success deleting {s} \n", .{sub_path});
+    }
+}
+
+pub fn changeDir(new_path: []const u8) ![]u8 {
+    const new_curr = try std.fs.openDirAbsolute(new_path, .{});
+    const allocator = std.heap.page_allocator;
+    return new_curr.realpathAlloc(allocator, ".");
 }
